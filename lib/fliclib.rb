@@ -7,4 +7,6 @@ module Fliclib
   autoload :Events, 'fliclib/events'
   autoload :PacketHeader, 'fliclib/packet_header'
   autoload :Primitives, 'fliclib/primitives'
+  autoload :RawClient, 'fliclib/raw_client'
+  autoload :SubscriptionPoint, 'fliclib/subscription_point'
 end
