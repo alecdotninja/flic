@@ -13,7 +13,7 @@ module Flic
         bluetooth_address :bluetooth_address
 
         latency_mode :latency_mode
-        uint16 :auto_disconnect_time
+        uint16 :auto_disconnect_time, initial_value: 512 # 512 means disabled
       end
     end
   end

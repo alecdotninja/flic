@@ -145,6 +145,35 @@ module Flic
       end
     end
 
+    def channel(bluetooth_address, latency_mode = :normal, auto_disconnect_time = nil, connection_id = rand(2**32))
+      auto_disconnect_time = 512 unless auto_disconnect_time # 512 means disabled
+
+      subscribe do |subscription|
+        send_command Protocol::Commands::CreateConnectionChannel.new(
+            connection_id: connection_id,
+            bluetooth_address: bluetooth_address,
+            latency_mode: latency_mode,
+            auto_disconnect_time: auto_disconnect_time
+        )
+
+        is_removed = false
+
+        begin
+          subscription.listen do |event|
+            case event
+              when Protocol::Events::ButtonUpOrDown, Protocol::Events::ButtonSingleOrDoubleClickOrHold
+                yield event.click_type, event.was_queued, event.time_difference, bluetooth_address
+              when Protocol::Events::ConnectionChannelRemoved
+                is_removed = true
+                break
+            end
+          end
+        ensure
+          send_command Protocol::Commands::RemoveConnectionChannel.new(connection_id: connection_id) unless is_removed
+        end
+      end
+    end
+
     private
 
     def event_bus
