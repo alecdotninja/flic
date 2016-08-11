@@ -162,7 +162,7 @@ module Flic
           subscription.listen do |event|
             case event
               when Protocol::Events::ButtonSingleOrDoubleClickOrHold
-                yield bluetooth_address, event.click_type, event.was_queued, event.time_difference
+                yield bluetooth_address, event.click_type, event.time_difference
               when Protocol::Events::ConnectionChannelRemoved
                 is_removed = true
                 break
@@ -196,7 +196,7 @@ module Flic
             case event
               when Protocol::Events::ButtonSingleOrDoubleClickOrHold
                 bluetooth_address = connection_id_bluetooth_address[event.connection_id]
-                yield bluetooth_address, event.click_type, event.was_queued, event.time_difference
+                yield bluetooth_address, event.click_type, event.time_difference
               when Protocol::Events::ConnectionChannelRemoved
                 bluetooth_address = connection_id_bluetooth_address[event.connection_id]
                 connection_id_bluetooth_address.delete event.connection_id
