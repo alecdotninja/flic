@@ -8,7 +8,6 @@ module Flic
       class ForceDisconnect < Command
         endian :little
 
-        uint32 :connection_id
         bluetooth_address :bluetooth_address
       end
     end
