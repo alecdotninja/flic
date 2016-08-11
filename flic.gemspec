@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{A Ruby implementation of the (Fliclib)[https://github.com/50ButtonsEach/fliclib-linux-hci/blob/master/ProtocolDocumentation.md]}
   spec.homepage      = 'https://github.com/anarchocurious/flic'
   spec.license       = 'MIT'
-  
+
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.require_paths = ['lib']
 

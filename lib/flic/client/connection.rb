@@ -24,7 +24,7 @@ module Flic
 
       attr_reader :hostname, :port
 
-      def initialize(hostname, port = 5551, *additional_socket_args)
+      def initialize(hostname = 'localhost', port = 5551, *additional_socket_args)
         @hostname, @port = hostname, port
         @socket = TCPSocket.new(hostname, port, *additional_socket_args)
         @read_semaphore = Mutex.new

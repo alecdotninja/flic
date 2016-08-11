@@ -161,8 +161,8 @@ module Flic
         begin
           subscription.listen do |event|
             case event
-              when Protocol::Events::ButtonUpOrDown, Protocol::Events::ButtonSingleOrDoubleClickOrHold
-                yield event.click_type, event.was_queued, event.time_difference, bluetooth_address
+              when Protocol::Events::ButtonSingleOrDoubleClickOrHold
+                yield bluetooth_address, event.click_type, event.was_queued, event.time_difference
               when Protocol::Events::ConnectionChannelRemoved
                 is_removed = true
                 break
@@ -170,6 +170,45 @@ module Flic
           end
         ensure
           send_command Protocol::Commands::RemoveConnectionChannel.new(connection_id: connection_id) unless is_removed
+        end
+      end
+    end
+
+    def listen(*bluetooth_addresses)
+      subscribe do |subscription|
+        connection_id_bluetooth_address = {}
+
+        begin
+          bluetooth_addresses.each do |bluetooth_address|
+            connection_id = rand(2**32)
+
+            send_command Protocol::Commands::CreateConnectionChannel.new(
+                connection_id: connection_id,
+                bluetooth_address: bluetooth_address,
+                latency_mode: :normal,
+                auto_disconnect_time: 512
+            )
+
+            connection_id_bluetooth_address[connection_id] = bluetooth_address
+          end
+
+          subscription.listen do |event|
+            case event
+              when Protocol::Events::ButtonSingleOrDoubleClickOrHold
+                bluetooth_address = connection_id_bluetooth_address[event.connection_id]
+                yield bluetooth_address, event.click_type, event.was_queued, event.time_difference
+              when Protocol::Events::ConnectionChannelRemoved
+                bluetooth_address = connection_id_bluetooth_address[event.connection_id]
+                connection_id_bluetooth_address.delete event.connection_id
+                raise "connection to #{bluetooth_address} was removed"
+            end
+          end
+        ensure
+          connection_id_bluetooth_address.each do |connection_id, _|
+            send_command Protocol::Commands::RemoveConnectionChannel.new(
+                connection_id: connection_id
+            )
+          end
         end
       end
     end
