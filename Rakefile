@@ -6,7 +6,7 @@ task :default => :spec
 task :test => :spec
 
 task :console do
-  require 'fliclib'
+  require 'flic'
   require 'pry'
   Pry.start
 end
