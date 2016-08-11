@@ -1,11 +1,9 @@
 require 'spec_helper'
 
-describe FliclibRuby do
+describe Fliclib do
   it 'has a version number' do
-    expect(FliclibRuby::VERSION).not_to be nil
+    expect(Fliclib::VERSION).not_to be nil
   end
 
-  it 'does something useful' do
-    expect(false).to eq(true)
-  end
+  pending 'has semantic and comprehensive specs'
 end
