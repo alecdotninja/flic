@@ -11,7 +11,7 @@ module Flic
         endian :little
 
         uint32 :scan_id
-        bluetooth_address :address
+        bluetooth_address :bluetooth_address
 
         device_name :name
 

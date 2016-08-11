@@ -33,6 +33,10 @@ module Flic
           end
         rescue Connection::ConnectionClosedError
           nil
+        rescue Protocol::Error => protocol_error
+          puts "[!] #{protocol_error.message}"
+
+          retry
         end
       end
 
@@ -57,13 +61,76 @@ module Flic
 
     def ping ping_id = rand(2**32)
       request Protocol::Commands::Ping.new(ping_id: ping_id) do |event|
-        Protocol::Events::PingResponse === event && event.ping_id == ping_id
+        Protocol::Events::PingResponse === event &&
+            event.ping_id == ping_id
       end
     end
 
-    def get_info
+    def server_info
       request Protocol::Commands::GetInfo, Protocol::Events::GetInfoResponse
     end
+
+    def button_uuid(bluetooth_address)
+      command = Protocol::Commands::GetButtonUuid.new(bluetooth_address: bluetooth_address)
+
+      response = request command do |event|
+        Protocol::Events::GetButtonUuidResponse === event &&
+            event.bluetooth_address == command.bluetooth_address
+      end
+
+      unless response.uuid == Protocol::INVALID_BUTTON_UUID
+        response.uuid
+      end
+    end
+
+    def scan(scan_id = rand(2**32))
+      subscribe do |subscription|
+        send_command Protocol::Commands::CreateScanner.new(scan_id: scan_id)
+
+        begin
+          subscription.listen do |event|
+            if Protocol::Events::AdvertisementPacket === event && event.scan_id == scan_id
+              yield event.bluetooth_address, event.name, event.rssi, event.is_private, event.is_already_verified
+            end
+          end
+        ensure
+          send_command Protocol::Commands::RemoveScanner.new(scan_id: scan_id)
+        end
+      end
+    end
+
+    def scan_wizard(scan_wizard_id = rand(2**32))
+      subscribe do |subscription|
+        send_command Protocol::Commands::CreateScanWizard.new(scan_wizard_id: scan_wizard_id)
+
+        result = nil
+        bluetooth_address = nil
+        name = nil
+
+        begin
+          subscription.listen do |event|
+            case event
+              when Protocol::Events::ScanWizardFoundPrivateButton
+                yield :found_private_button
+              when Protocol::Events::ScanWizardFoundPublicButton
+                bluetooth_address, name = event.bluetooth_address, event.name
+                yield :found_public_button, bluetooth_address, name
+              when Protocol::Events::ScanWizardButtonConnected
+                yield :button_connected, bluetooth_address, name
+              when Protocol::Events::ScanWizardCompleted
+                result = event.scan_wizard_result
+                break
+            end
+          end
+        ensure
+          send_command Protocol::Commands::CancelScanWizard.new(scan_wizard_id: scan_wizard_id) unless result
+        end
+
+        result
+      end
+    end
+
+
 
     private
 

@@ -12,7 +12,6 @@ module Flic
         uint32 :scan_wizard_id
 
         bluetooth_address :bluetooth_address
-        uint8 :name_length
         device_name :name
       end
     end

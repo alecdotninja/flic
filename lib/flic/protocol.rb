@@ -9,6 +9,8 @@ module Flic
     autoload :PacketHeader, 'flic/protocol/packet_header'
     autoload :Primitives, 'flic/protocol/primitives'
 
+    INVALID_BUTTON_UUID = '00000000-0000-0000-0000-000000000000'.freeze
+
     def self.serialize_command(command)
       case command
         when Commands::Command

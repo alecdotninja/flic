@@ -15,7 +15,7 @@ module Flic
           ''.tap do |string|
             byte_length.times do |index|
               break unless index < BYTE_LENGTH
-              string << bytes[index]
+              string << bytes[index].to_i
             end
           end
         end
@@ -25,7 +25,7 @@ module Flic
           bytes = []
 
           BYTE_LENGTH.times do |index|
-            char = value[index]
+            char = value[index].to_s
 
             if char
               bytes << char.ord
