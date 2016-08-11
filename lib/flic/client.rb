@@ -56,18 +56,13 @@ module Flic
     end
 
     def ping ping_id = rand(2**32)
-      ping = Protocol::Commands::Ping.new(ping_id: ping_id)
-
-      subscribe do |subscription|
-        send_command ping
-
-        subscription.listen do |event|
-          case event
-            when Protocol::Events::PingResponse
-              break ping, event if event.ping_id == ping_id
-          end
-        end
+      request Protocol::Commands::Ping.new(ping_id: ping_id) do |event|
+        Protocol::Events::PingResponse === event && event.ping_id == ping_id
       end
+    end
+
+    def get_info
+      request Protocol::Commands::GetInfo, Protocol::Events::GetInfoResponse
     end
 
     private
@@ -77,6 +72,7 @@ module Flic
     end
 
     def send_command(command)
+      command = command.new if Class === command
       connection.send_command(command)
     rescue Client::Connection::ConnectionClosedError
       raise ClientShutdownError
@@ -86,6 +82,18 @@ module Flic
       event_bus.subscribe { |subscription| yield subscription }
     rescue EventBus::EventBusShutdown
       raise ClientShutdownError
+    end
+
+    def request(command, response_matcher = Proc.new)
+      subscribe do |subscription|
+        send_command command
+
+        subscription.listen do |event|
+          if response_matcher === event
+            break event
+          end
+        end
+      end
     end
   end
 end
