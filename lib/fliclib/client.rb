@@ -1,11 +1,14 @@
 require 'fliclib'
-require 'fliclib/raw_client'
-require 'fliclib/subscription_point'
-
-require 'thread'
+require 'fliclib/event_bus'
+require 'fliclib/protocol'
 
 module Fliclib
   class Client
+    autoload :Connection, 'fliclib/client/connection'
+
+    class Error < StandardError; end
+    class ClientShutdownError < Error; end
+
     class << self
       def open(*args)
         client = new(*args)
@@ -13,52 +16,55 @@ module Fliclib
         begin
           yield client
         ensure
-          client.close
+          client.shutdown
         end
       end
     end
 
-    attr_reader :raw_client, :event_thread, :subscription_point
+    attr_reader :connection, :driver
 
-    def initialize(*args)
-      @raw_client = RawClient.new(*args)
+    def initialize(*connection_args)
+      @connection = Connection.new(*connection_args)
 
-      @subscription_point = SubscriptionPoint.new
-
-      @event_thread = Thread.new do
+      @driver = EventBus::Driver.new do |event_bus|
         begin
-          raw_client.listen do |event|
-            subscription_point.broadcast(event)
+          connection.listen do |event|
+            event_bus.broadcast(event)
           end
-        ensure
-          subscription_point.destroy
+        rescue Connection::ConnectionClosedError
+          nil
         end
       end
 
       yield self if block_given?
     end
 
-    def closed?
-      raw_client.closed?
+    def hostname
+      connection.hostname
     end
 
-    def close
-      unless closed?
-        raw_client.close
-        event_thread.exit
-        event_thread.join
-      end
+    def port
+      connection.port
+    end
+
+    def shutdown?
+      connection.closed?
+    end
+
+    def shutdown
+      connection.close
     end
 
     def ping ping_id = rand(2**32)
-      ping = Commands::Ping.new(ping_id: ping_id)
+      ping = Protocol::Commands::Ping.new(ping_id: ping_id)
 
-      subscription_point.subscribe do |subscription|
+      subscribe do |subscription|
         send_command ping
 
         subscription.listen do |event|
-          if Events::PingResponse === event && event.ping_id == ping_id
-            break event
+          case event
+            when Protocol::Events::PingResponse
+              break ping, event if event.ping_id == ping_id
           end
         end
       end
@@ -66,8 +72,20 @@ module Fliclib
 
     private
 
-    def send_command(*args)
-      raw_client.send_command(*args)
+    def event_bus
+      @event_bus ||= driver.event_bus
+    end
+
+    def send_command(command)
+      connection.send_command(command)
+    rescue Client::Connection::ConnectionClosedError
+      raise ClientShutdownError
+    end
+
+    def subscribe
+      event_bus.subscribe { |subscription| yield subscription }
+    rescue EventBus::EventBusShutdown
+      raise ClientShutdownError
     end
   end
 end
