@@ -1,6 +1,6 @@
 # Flic
 
-Flic is a Ruby implementation of the (Fliclib)[https://github.com/50ButtonsEach/fliclib-linux-hci/blob/master/ProtocolDocumentation.md]
+Flic is a Ruby implementation of the [Fliclib](https://github.com/50ButtonsEach/fliclib-linux-hci/blob/master/ProtocolDocumentation.md).
 
 ## Installation
 
