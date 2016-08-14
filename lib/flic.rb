@@ -1,7 +1,7 @@
 require 'flic/version'
 
 module Flic
+  autoload :Callbacks, 'flic/callbacks'
   autoload :Client, 'flic/client'
-  autoload :EventBus, 'flic/event_bus'
   autoload :Protocol, 'flic/protocol'
 end

@@ -1,6 +1,7 @@
 require 'flic/protocol/commands'
 require 'flic/protocol/commands/command'
 require 'flic/protocol/primitives/latency_mode'
+require 'flic/protocol/primitives/disconnect_time'
 
 module Flic
   module Protocol
@@ -8,9 +9,9 @@ module Flic
       class ChangeModeParameters < Command
         endian :little
 
-        uint32 :connection_id
+        uint32 :connection_channel_id
         latency_mode :latency_mode
-        uint16 :auto_disconnect_time
+        disconnect_time :auto_disconnect_time
       end
     end
   end

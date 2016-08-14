@@ -9,7 +9,7 @@ module Flic
       class ButtonClickOrHold < Event
         endian :little
 
-        uint32 :connection_id
+        uint32 :connection_channel_id
         click_type :click_type
         boolean :was_queued
         uint32 :time_difference

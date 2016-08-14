@@ -12,6 +12,7 @@ module Flic
       autoload :CreateConnectionChannelError, 'flic/protocol/primitives/create_connection_channel_error'
       autoload :DeviceName, 'flic/protocol/primitives/device_name'
       autoload :DisconnectReason, 'flic/protocol/primitives/disconnect_reason'
+      autoload :DisconnectTime, 'flic/protocol/primitives/disconnect_time'
       autoload :Enum, 'flic/protocol/primitives/enum'
       autoload :LatencyMode, 'flic/protocol/primitives/latency_mode'
       autoload :RemovedReason, 'flic/protocol/primitives/removed_reason'

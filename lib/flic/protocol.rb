@@ -5,6 +5,7 @@ module Flic
     class Error < StandardError; end
 
     autoload :Commands, 'flic/protocol/commands'
+    autoload :Connection, 'flic/protocol/connection'
     autoload :Events, 'flic/protocol/events'
     autoload :PacketHeader, 'flic/protocol/packet_header'
     autoload :Primitives, 'flic/protocol/primitives'

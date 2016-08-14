@@ -1,32 +1,14 @@
-require 'flic'
-require 'flic/client'
 require 'flic/protocol'
 
-require 'socket'
-
 module Flic
-  class Client
+  module Protocol
     class Connection
-      class Error < StandardError; end
       class ConnectionClosedError < Error; end
 
-      class << self
-        def open(*args)
-          client = new(*args)
+      attr_reader :socket
 
-          begin
-            yield client
-          ensure
-            client.close
-          end
-        end
-      end
-
-      attr_reader :hostname, :port
-
-      def initialize(hostname = 'localhost', port = 5551, *additional_socket_args)
-        @hostname, @port = hostname, port
-        @socket = TCPSocket.new(hostname, port, *additional_socket_args)
+      def initialize(socket)
+        @socket = socket
         @read_semaphore = Mutex.new
         @write_semaphore = Mutex.new
       end
@@ -35,12 +17,16 @@ module Flic
         send_packet Protocol.serialize_command(command)
       end
 
-      def recv_event
-        Protocol.parse_event(recv_packet)
+      def recv_command
+        Protocol.parse_event(recv_command)
       end
 
-      def listen
-        loop { yield recv_event }
+      def send_event(event)
+        send_packet Protocol.serialize_event(event)
+      end
+
+      def recv_event
+        Protocol.parse_event(recv_packet)
       end
 
       def closed?

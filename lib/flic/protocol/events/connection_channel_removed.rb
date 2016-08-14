@@ -8,8 +8,8 @@ module Flic
       class ConnectionChannelRemoved < Event
         endian :little
 
-        uint32 :connection_id
-        removed_reason :removed_reason
+        uint32 :connection_channel_id
+        removed_reason :reason
       end
     end
   end

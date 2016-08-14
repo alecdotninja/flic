@@ -7,7 +7,7 @@ module Flic
       class RemoveConnectionChannel < Command
         endian :little
 
-        uint32 :connection_id
+        uint32 :connection_channel_id
       end
     end
   end

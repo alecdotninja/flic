@@ -9,7 +9,7 @@ module Flic
       class CreateConnectionChannelResponse < Event
         endian :little
 
-        uint32 :connection_id
+        uint32 :connection_channel_id
         create_connection_channel_error :error
         connection_status :connection_status
       end
