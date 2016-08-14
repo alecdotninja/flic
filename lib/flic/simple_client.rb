@@ -15,7 +15,6 @@ module Flic
 
     def shutdown
       client.shutdown
-      event_dispatch_thread.join
     end
 
     def buttons
