@@ -13,7 +13,7 @@ module Flic
         semaphore_instance_variable = :"@#{callback_name}_callbacks_semaphore"
         callbacks_instance_variable = :"@#{callback_name}_callbacks"
 
-        define_method :"#{callback_name}" do |*args|
+        define_method :"#{callback_name}" do |*args, &callback|
           semaphore = SEMAPHORE.synchronize do
             instance_variable_get(semaphore_instance_variable) ||
                 instance_variable_set(semaphore_instance_variable, Mutex.new)
@@ -23,8 +23,8 @@ module Flic
             callbacks = instance_variable_get(callbacks_instance_variable) ||
                 instance_variable_set(callbacks_instance_variable, [])
 
-            if block_given?
-              callbacks << Proc.new
+            if callback
+              callbacks << callback
             else
               callbacks.each { |callback| callback.call *args }
             end

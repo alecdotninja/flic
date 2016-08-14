@@ -4,6 +4,7 @@ module Flic
   module Protocol
     class Connection
       class ConnectionClosedError < Error; end
+      class NilResponse < Error; end
 
       attr_reader :socket
 
@@ -57,10 +58,17 @@ module Flic
         @read_semaphore.synchronize do
           packet_header = Protocol::PacketHeader.new
           packet_header_bytes = @socket.read packet_header.num_bytes
+
+          raise NilResponse unless packet_header_bytes
+
           packet_header.read(packet_header_bytes)
 
           @socket.read(packet_header.byte_length)
         end
+      rescue NilResponse
+        @socket.close
+
+        retry
       rescue IOError
         if closed?
           raise ConnectionClosedError

@@ -1,7 +1,5 @@
 require 'flic/client'
 
-require 'struct'
-
 module Flic
   class Client
     ServerInfo = Struct.new(

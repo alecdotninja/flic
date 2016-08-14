@@ -21,7 +21,7 @@ module Flic
         elsif value
           self.time = value
         else
-          self.time = nil
+          self.time = 512
         end
       end
     end

@@ -1,5 +1,6 @@
 require 'flic'
 
+require 'thread'
 require 'socket'
 
 module Flic
@@ -43,7 +44,8 @@ module Flic
 
     def initialize(host = 'localhost', port = 5551)
       @host, @port = host, port
-      @socket = TCPSocket.new(hostname, port)
+      @handle_next_event_semaphore = Mutex.new
+      @socket = TCPSocket.new(host, port)
       @connection = Protocol::Connection.new(socket)
       yield self if block_given?
     end
@@ -52,28 +54,27 @@ module Flic
       connection.close
     end
 
-    def process_events
-      loop { handle_event(connection.recv_event) }
-    rescue Protocol::Connection::ConnectionClosedError
-      shutdown
+    def handle_next_event
+      @handle_next_event_semaphore.synchronize do
+        begin
+          handle_event connection.recv_event
+        rescue Protocol::Connection::ConnectionClosedError
+          shutdown
 
-      raise ClientShutdownError, 'The connection has been closed'
+          raise ClientShutdownError, 'The connection has been closed'
+        end
+      end
     end
 
-    # def main_loop
-    #   process_events
-    # rescue UnexpectedEventError, Protocol::Error => error
-    #   warn error
-    #   retry
-    # ensure
-    #   shutdown
-    # end
+    def enter_main_loop
+      loop { handle_next_event }
+    end
 
     private
 
     def send_command(command)
       connection.send_command(command)
-    rescue Client::Connection::ConnectionClosedError
+    rescue Protocol::Connection::ConnectionClosedError
       shutdown
 
       raise ClientShutdownError, 'The connection has been closed'
