@@ -19,7 +19,7 @@ module Flic
       end
 
       def recv_command
-        Protocol.parse_event(recv_command)
+        Protocol.parse_command(recv_packet)
       end
 
       def send_event(event)
