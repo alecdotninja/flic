@@ -15,9 +15,7 @@ module Flic
     end
 
     def shutdown
-      @semaphore.synchronize do
-        client.shutdown
-      end
+      client.shutdown
     end
 
     def buttons
