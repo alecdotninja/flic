@@ -1,27 +1,29 @@
 require 'flic/protocol/primitives'
 
 module Flic
-  module Primitives
-    class DisconnectTime < BinData::Primitive
-      endian :little
+  module Protocol
+    module Primitives
+      class DisconnectTime < BinData::Primitive
+        endian :little
 
-      uint16 :time, initial_value: 512
+        uint16 :time, initial_value: 512
 
-      def get
-        if time == 512
-          nil
-        else
-          time
+        def get
+          if time == 512
+            nil
+          else
+            time
+          end
         end
-      end
 
-      def set(value)
-        if value == 512
-          raise RangeError, '512 is a special value that cannot be used for disconnect_time'
-        elsif value
-          self.time = value
-        else
-          self.time = 512
+        def set(value)
+          if value == 512
+            raise RangeError, '512 is a special value that cannot be used for disconnect_time'
+          elsif value
+            self.time = value
+          else
+            self.time = 512
+          end
         end
       end
     end
