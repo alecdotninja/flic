@@ -2,6 +2,8 @@ require 'flic'
 
 module Flic
   module Protocol
+    extend self
+
     class Error < StandardError; end
 
     autoload :Commands, 'flic/protocol/commands'
@@ -12,7 +14,7 @@ module Flic
 
     INVALID_BUTTON_UUID = '00000000-0000-0000-0000-000000000000'.freeze
 
-    def self.serialize_command(command)
+    def serialize_command(command)
       case command
         when Commands::Command
           command.to_binary_s
@@ -23,7 +25,7 @@ module Flic
       raise Error, "Cannot serialize command `#{command.inspect}`"
     end
 
-    def self.parse_command(serialized_command)
+    def parse_command(serialized_command)
       command = Commands::Command.read(serialized_command)
       opcode = command.opcode
       command_class = Commands::Command.command_class_for_opcode(opcode)
@@ -37,7 +39,7 @@ module Flic
       raise Error, "Cannot parse event `#{serialized_command.inspect}`"
     end
 
-    def self.serialize_event(event)
+    def serialize_event(event)
       case event
         when Commands::Event
           event.to_binary_s
@@ -48,7 +50,7 @@ module Flic
       raise Error, "Cannot serialize event `#{event.inspect}`"
     end
 
-    def self.parse_event(serialized_event)
+    def parse_event(serialized_event)
       event = Events::Event.read(serialized_event)
       opcode = event.opcode
       event_class = Events.event_class_for_opcode(opcode)
