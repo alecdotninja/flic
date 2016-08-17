@@ -7,12 +7,10 @@ module Flic
   module Protocol
     module Events
       class ButtonUpOrDown < Event
-        endian :little
-
-        uint32 :connection_channel_id
+        uint32le :connection_channel_id
         click_type :click_type
         boolean :was_queued
-        uint32 :time_difference
+        uint32le :time_difference
       end
     end
   end

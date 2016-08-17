@@ -5,9 +5,7 @@ module Flic
   module Protocol
     module Events
       class GotSpaceForNewConnection < Event
-        endian :little
-
-        uint8 :maximum_concurrently_connected_buttons
+        uint8le :maximum_concurrently_connected_buttons
       end
     end
   end

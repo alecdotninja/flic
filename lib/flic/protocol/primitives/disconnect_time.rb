@@ -4,9 +4,7 @@ module Flic
   module Protocol
     module Primitives
       class DisconnectTime < BinData::Primitive
-        endian :little
-
-        uint16 :time, initial_value: 512
+        uint16le :time, initial_value: 512
 
         def get
           if time == 512

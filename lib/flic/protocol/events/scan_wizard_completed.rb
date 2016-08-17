@@ -6,9 +6,7 @@ module Flic
   module Protocol
     module Events
       class ScanWizardCompleted < Event
-        endian :little
-
-        uint32 :scan_wizard_id
+        uint32le :scan_wizard_id
         scan_wizard_result :scan_wizard_result
       end
     end

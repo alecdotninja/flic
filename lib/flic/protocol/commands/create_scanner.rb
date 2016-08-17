@@ -5,9 +5,7 @@ module Flic
   module Protocol
     module Commands
       class CreateScanner < Command
-        endian :little
-
-        uint32 :scan_id
+        uint32le :scan_id
       end
     end
   end

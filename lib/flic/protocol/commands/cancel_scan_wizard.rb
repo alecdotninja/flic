@@ -6,9 +6,7 @@ module Flic
   module Protocol
     module Commands
       class CancelScanWizard < Command
-        endian :little
-
-        uint32 :scan_wizard_id
+        uint32le :scan_wizard_id
       end
     end
   end

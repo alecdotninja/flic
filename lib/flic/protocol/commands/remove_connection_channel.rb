@@ -5,9 +5,7 @@ module Flic
   module Protocol
     module Commands
       class RemoveConnectionChannel < Command
-        endian :little
-
-        uint32 :connection_channel_id
+        uint32le :connection_channel_id
       end
     end
   end

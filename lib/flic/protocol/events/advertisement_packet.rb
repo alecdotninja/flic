@@ -8,14 +8,12 @@ module Flic
   module Protocol
     module Events
       class AdvertisementPacket < Event
-        endian :little
-
-        uint32 :scan_id
+        uint32le :scan_id
         bluetooth_address :bluetooth_address
 
         device_name :name
 
-        int8 :rssi
+        int8le :rssi
 
         boolean :is_private
         boolean :is_already_verified

@@ -6,9 +6,7 @@ module Flic
   module Protocol
     module Events
       class ConnectionChannelRemoved < Event
-        endian :little
-
-        uint32 :connection_channel_id
+        uint32le :connection_channel_id
         removed_reason :reason
       end
     end

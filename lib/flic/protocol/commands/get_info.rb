@@ -5,7 +5,6 @@ module Flic
   module Protocol
     module Commands
       class GetInfo < Command
-        endian :little
       end
     end
   end

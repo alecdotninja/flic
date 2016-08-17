@@ -9,16 +9,18 @@ module Flic
     class ConnectionChannelRemoved < Error; end
     class ButtonIsPrivateError < Error; end
 
-    attr_reader :host, :port
+    attr_reader :host, :port, :thread
 
     def initialize(host = 'localhost', port = 5551)
+      @host, @port = host, port
+      
       @blocker = Blocker.new
       @client = Client.new(host, port)
 
       @listen_queues_semaphore = Mutex.new
       @listen_queues = []
 
-      @network_thread = Thread.new do
+      @thread = Thread.new do
         begin
           @client.enter_main_loop
         rescue Client::Shutdown
@@ -47,7 +49,7 @@ module Flic
 
       @client.shutdown
 
-      @network_thread.join unless Thread.current == @network_thread
+      @thread.join unless Thread.current == @thread
 
       @is_shutdown = true
     end

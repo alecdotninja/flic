@@ -7,9 +7,7 @@ module Flic
   module Protocol
     module Events
       class ConnectionStatusChanged < Event
-        endian :little
-
-        uint32 :connection_channel_id
+        uint32le :connection_channel_id
         connection_status :connection_status
 
         disconnect_reason :disconnect_reason    # only relevant when connection_status is :disconnected

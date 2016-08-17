@@ -7,8 +7,6 @@ module Flic
   module Protocol
     module Events
       class GetButtonUuidResponse < Event
-        endian :little
-
         bluetooth_address :bluetooth_address
         uuid :uuid
       end

@@ -6,8 +6,6 @@ module Flic
   module Protocol
     module Commands
       class GetButtonUuid < Command
-        endian :little
-
         bluetooth_address :bluetooth_address
       end
     end

@@ -6,14 +6,20 @@ module Flic
   module Protocol
     module Events
       class Event < BinData::Record
-        endian :little
-
-        uint8 :opcode, initial_value: -> { init_opcode }
+        uint8le :opcode, initial_value: :class_opcode, assert: :opcode_matcher
 
         private
 
-        def init_opcode
-          Event.opcode_for_event_class(self.class)
+        def class_opcode
+          @@class_opcode ||= Events.opcode_for_event_class(self.class)
+        end
+
+        def opcode_matcher
+          if class_opcode
+            class_opcode
+          else
+            true
+          end
         end
       end
     end

@@ -8,9 +8,7 @@ module Flic
   module Protocol
     module Commands
       class CreateConnectionChannel < Command
-        endian :little
-
-        uint32 :connection_channel_id
+        uint32le :connection_channel_id
         bluetooth_address :bluetooth_address
 
         latency_mode :latency_mode

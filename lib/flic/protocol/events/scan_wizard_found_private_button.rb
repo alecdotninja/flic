@@ -5,9 +5,7 @@ module Flic
   module Protocol
     module Events
       class ScanWizardFoundPrivateButton < Event
-        endian :little
-
-        uint32 :scan_wizard_id
+        uint32le :scan_wizard_id
       end
     end
   end

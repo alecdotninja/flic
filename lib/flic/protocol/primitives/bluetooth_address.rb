@@ -10,7 +10,7 @@ module Flic
         PRINTF_FORMAT_STRING = '%.2X:%.2X:%.2X:%.2X:%.2X:%.2X'.freeze
         SCANF_FORMAT_STRING = '%X:%X:%X:%X:%X:%X'.freeze
 
-        array :little_endian_octets, type: :uint8, initial_length: 6
+        array :little_endian_octets, type: :uint8le, initial_length: 6
 
         def get
           sprintf(PRINTF_FORMAT_STRING, *big_endian_octets)

@@ -6,8 +6,6 @@ module Flic
   module Protocol
     module Events
       class BluetoothControllerStateChange < Event
-        endian :little
-
         bluetooth_controller_state :bluetooth_controller_state
       end
     end

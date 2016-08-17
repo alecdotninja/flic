@@ -7,9 +7,7 @@ module Flic
   module Protocol
     module Commands
       class ChangeModeParameters < Command
-        endian :little
-
-        uint32 :connection_channel_id
+        uint32le :connection_channel_id
         latency_mode :latency_mode
         disconnect_time :auto_disconnect_time
       end
