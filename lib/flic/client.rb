@@ -6,7 +6,7 @@ require 'socket'
 module Flic
   class Client
     class Error < StandardError; end
-    class ClientShutdownError < Error; end
+    class Shutdown < Error; end
 
     autoload :ConnectionChannel, 'flic/client/connection_channel'
     autoload :Features, 'flic/client/features'
@@ -41,27 +41,32 @@ module Flic
     define_callbacks :new_button_verified, :bluetooth_controller_state_changed,
                      :connections_exhausted, :connection_available
 
-
     def initialize(host = 'localhost', port = 5551)
       @host, @port = host, port
       @handle_next_event_semaphore = Mutex.new
       @socket = TCPSocket.new(host, port)
       @connection = Protocol::Connection.new(socket)
+      @is_shutdown = false
       yield self if block_given?
     end
 
+    def shutdown?
+      @is_shutdown
+    end
+
     def shutdown
-      connection.close
+      socket.close
+      @is_shutdown = true
     end
 
     def handle_next_event
       @handle_next_event_semaphore.synchronize do
         begin
           handle_event connection.recv_event
-        rescue Protocol::Connection::ConnectionClosedError
+        rescue Protocol::Connection::UnderlyingSocketClosedError
           shutdown
 
-          raise ClientShutdownError, 'The connection has been closed'
+          raise Shutdown, 'The connection has been closed'
         end
       end
     end
@@ -74,10 +79,10 @@ module Flic
 
     def send_command(command)
       connection.send_command(command)
-    rescue Protocol::Connection::ConnectionClosedError
+    rescue Protocol::Connection::UnderlyingSocketClosedError
       shutdown
 
-      raise ClientShutdownError, 'The connection has been closed'
+      raise Shutdown, 'The connection has been closed'
     end
 
     def handle_event(event)

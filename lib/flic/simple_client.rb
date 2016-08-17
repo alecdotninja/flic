@@ -5,119 +5,157 @@ require 'thread'
 module Flic
   class SimpleClient
     class Error < StandardError; end
-    class ConnectionChannelRemoved; end
-    
-    attr_reader :client
+    class Shutdown < Error; end
+    class ConnectionChannelRemoved < Error; end
+    class ButtonIsPrivateError < Error; end
 
-    def initialize(*client_args)
-      @semaphore = Mutex.new
-      @client = Client.new(*client_args)
+    attr_reader :host, :port
+
+    def initialize(host = 'localhost', port = 5551)
+      @blocker = Blocker.new
+      @client = Client.new(host, port)
+
+      @listen_queues_semaphore = Mutex.new
+      @listen_queues = []
+
+      @network_thread = Thread.new do
+        begin
+          @client.enter_main_loop
+        rescue Client::Shutdown
+            nil
+        ensure
+          shutdown
+        end
+      end
+
+      @is_shutdown = false
+    end
+
+    def shutdown?
+      @is_shutdown
     end
 
     def shutdown
-      client.shutdown
+      @listen_queues_semaphore.synchronize do
+        unless @listen_queues.frozen?
+          @listen_queues.each { |queue| queue << :shutdown }.clear
+          @listen_queues.freeze
+        end
+      end
+
+      @blocker.unblock_all! Shutdown, 'The client has shutdown'
+
+      @client.shutdown
+
+      @network_thread.join unless Thread.current == @network_thread
+
+      @is_shutdown = true
     end
 
     def buttons
-      @semaphore.synchronize do
-        server_info = process_events_until do |callback|
-          client.get_info(&callback)
+      @blocker.block_until_callback do |callback|
+        @client.get_info do |server_info|
+          callback.call server_info.verified_buttons_bluetooth_addresses
         end
-
-        server_info.verified_buttons_bluetooth_addresses
       end
+    rescue Client::Shutdown
+      raise  Shutdown, 'The client has shutdown'
     end
 
     def connect_button
-      @semaphore.synchronize do
-        scan_wizard = Client::ScanWizard.new
+      scan_wizard = Client::ScanWizard.new
+      saw_only_private_button = false
 
-        begin
-          process_events_until do |callback|
-            scan_wizard.removed do |result, bluetooth_address, *|
-              if result == :success
-                callback.call(bluetooth_address)
-              else
-                callback.call(nil)
-              end
-            end
-
-            client.add_scan_wizard(scan_wizard)
+      begin
+        @blocker.block_until_callback do |callback|
+          scan_wizard.found_private_button do
+            saw_only_private_button = true
           end
-        ensure
-          client.remove_scan_wizard(scan_wizard)
+
+          scan_wizard.found_public_button do
+            saw_only_private_button = false
+          end
+
+          scan_wizard.removed do
+            callback.call
+          end
+
+          @client.add_scan_wizard(scan_wizard)
         end
+      ensure
+        @client.remove_scan_wizard(scan_wizard)
       end
+
+      if scan_wizard.successful?
+        scan_wizard.button_bluetooth_address
+      elsif saw_only_private_button
+        raise ButtonIsPrivateError, 'A button was found, but it is private. Press and hold the button for 7 seconds to make it public and try again.'
+      end
+    rescue Client::Shutdown
+      raise  Shutdown, 'The client has shutdown'
     end
 
     def disconnect_button(button_bluetooth_address)
-      @semaphore.synchronize do
-        client.force_disconnect(button_bluetooth_address)
-      end
+      @client.force_disconnect(button_bluetooth_address)
+    rescue Client::Shutdown
+      raise  Shutdown, 'The client has shutdown'
     end
 
-    def listen(latency_mode, *button_bluetooth_addresses)
-      @semaphore.synchronize do
-        connection_channels = []
-        button_events = []
-        broken = false
+    def listen(button_bluetooth_address_or_latency_mode, *button_bluetooth_addresses)
+      if Symbol === button_bluetooth_address_or_latency_mode
+        latency_mode = button_bluetooth_address_or_latency_mode
+      else
+        latency_mode = :normal
+        button_bluetooth_addresses.unshift button_bluetooth_address_or_latency_mode
+      end
 
-        begin
-          button_bluetooth_addresses.each do |button_bluetooth_addresses|
-            connection_channel = Client::ConnectionChannel.new(button_bluetooth_addresses, latency_mode)
+      connection_channels = []
+      queue = Queue.new
 
-            connection_channel.button_up_or_down do |click_type, latency|
-              button_events << [button_bluetooth_addresses, click_type, latency]
-            end
+      @listen_queues_semaphore.synchronize { @listen_queues << queue }
 
-            connection_channel.button_single_click_or_double_click_or_hold do |click_type, latency|
-              button_events << [button_bluetooth_addresses, click_type, latency]
-            end
+      begin
+        button_bluetooth_addresses.each do |button_bluetooth_addresses|
+          connection_channel = Client::ConnectionChannel.new(button_bluetooth_addresses, latency_mode)
 
-            connection_channel.removed do
-              broken = true
-            end
-
-            connection_channels << connection_channel
-
-            client.add_connection_channel connection_channel
+          connection_channel.button_up_or_down do |click_type, latency|
+            queue << [:button_interaction, button_bluetooth_addresses, click_type, latency]
           end
 
-          loop do
-            client.handle_next_event while !broken && button_events.empty?
-
-            button_events.each do |button_event|
-              yield *button_event
-            end
-
-            button_events.clear
-
-            raise ConnectionChannelRemoved, 'A connection channel was removed' if broken
+          connection_channel.button_single_click_or_double_click_or_hold do |click_type, latency|
+            queue << [:button_interaction, button_bluetooth_addresses, click_type, latency]
           end
-        ensure
-          connection_channels.each do |connection_channel|
-            client.remove_connection_channel connection_channel
+
+          connection_channel.removed do
+            queue << [:connection_channel_removed, connection_channel]
+          end
+
+          connection_channels << connection_channel
+
+          @client.add_connection_channel connection_channel
+        end
+
+        loop do
+          event_type, *params = queue.pop
+
+          case event_type
+            when :button_interaction
+              yield *params
+            when :connection_channel_removed
+              raise ConnectionChannelRemoved, 'A connection channel was removed'
+            when :shutdown
+              raise  Shutdown, 'The client has shutdown'
           end
         end
+      ensure
+        connection_channels.each do |connection_channel|
+          @client.remove_connection_channel connection_channel
+        end
+
+        @listen_queues_semaphore.synchronize { @listen_queues.delete queue unless @listen_queues.frozen? }
       end
-    end
-
-    private
-
-    def process_events_until
-      done = false
-      result = nil
-
-      callback = proc do |_result|
-        done = true
-        result = _result
-      end
-
-      yield callback
-
-      client.handle_next_event until done
-
-      result
+    rescue Client::Shutdown
+      raise  Shutdown, 'The client has shutdown'
     end
   end
 end

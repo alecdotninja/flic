@@ -9,6 +9,10 @@ module Flic
 
       define_callbacks :added, :removed,
                        :found_private_button, :found_public_button, :button_connected
+
+      def successful?
+        result == :success
+      end
     end
   end
 end

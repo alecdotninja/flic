@@ -3,8 +3,8 @@ require 'flic/protocol'
 module Flic
   module Protocol
     class Connection
-      class ConnectionClosedError < Error; end
-      class NilResponse < Error; end
+      class UnderlyingSocketClosedError < Error; end
+      class UnexpectedNilReturnValueFromRead < Error; end
 
       attr_reader :socket
 
@@ -30,14 +30,6 @@ module Flic
         Protocol.parse_event(recv_packet)
       end
 
-      def closed?
-        @socket.closed?
-      end
-
-      def close
-        @socket.close
-      end
-
       private
 
       def send_packet(payload)
@@ -46,9 +38,9 @@ module Flic
           @socket.write(packet_header.to_binary_s)
           @socket.write(payload)
         end
-      rescue IOError
-        if closed?
-          raise ConnectionClosedError
+      rescue RuntimeError, IOError
+        if @socket.closed?
+          raise UnderlyingSocketClosedError
         else
           raise
         end
@@ -59,19 +51,18 @@ module Flic
           packet_header = Protocol::PacketHeader.new
           packet_header_bytes = @socket.read packet_header.num_bytes
 
-          raise NilResponse unless packet_header_bytes
+          raise UnexpectedNilReturnValueFromRead unless packet_header_bytes
 
           packet_header.read(packet_header_bytes)
 
           @socket.read(packet_header.byte_length)
         end
-      rescue NilResponse
+      rescue UnexpectedNilReturnValueFromRead
         @socket.close
-
         retry
-      rescue IOError
-        if closed?
-          raise ConnectionClosedError
+      rescue RuntimeError, IOError
+        if @socket.closed?
+          raise UnderlyingSocketClosedError
         else
           raise
         end
