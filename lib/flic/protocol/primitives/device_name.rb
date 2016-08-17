@@ -5,11 +5,12 @@ require 'bindata'
 module Flic
   module Protocol
     module Primitives
+      # The name of a device (up to 16 character string)
       class DeviceName < BinData::Primitive
         BYTE_LENGTH = 16
 
         uint8 :byte_length
-        array :bytes, type: :int8, initial_length: BYTE_LENGTH
+        array :bytes, type: :int8le, initial_length: BYTE_LENGTH
 
         def get
           ''.tap do |string|

@@ -40,76 +40,78 @@ To gracefully cleanup all connection channels and close the socket connection, c
 ### Example
 This is the script that I wrote to allow some of my Flic buttons to control Wink-enabled smart devices in home.
 ```ruby
-#!/usr/bin/env ruby
 
-require 'bundler/setup'
-require 'flic'
-require 'httparty'
+    #!/usr/bin/env ruby
 
-# Obtained from https://winkbearertoken.appspot.com/
-WINK_ACCESS_TOKEN	= 'YOUR ACCESS TOKEN HERE'
+    require 'bundler/setup'
+    require 'flic'
+    require 'httparty'
 
-# These bluetooth addresses were obtained from SimpleClient#connect_button
-LIVING_ROOM_BUTTON 	= 'XX:XX:XX:XX:XX:XX'
-BEDROOM_BUTTON 		= 'XX:XX:XX:XX:XX:XX'
-NIGHTSTAND_BUTTON 	= 'XX:XX:XX:XX:XX:XX'
+    # Obtained from https://winkbearertoken.appspot.com/
+    WINK_ACCESS_TOKEN	= 'YOUR ACCESS TOKEN HERE'
 
-begin
-	puts "[*] Opening a connection to flicd..."
-	client = Flic::SimpleClient.new
+    # These bluetooth addresses were obtained from SimpleClient#connect_button
+    LIVING_ROOM_BUTTON 	= 'XX:XX:XX:XX:XX:XX'
+    BEDROOM_BUTTON 		= 'XX:XX:XX:XX:XX:XX'
+    NIGHTSTAND_BUTTON 	= 'XX:XX:XX:XX:XX:XX'
 
-	puts "[*] Entering main loop"
-	client.listen(:low, LIVING_ROOM_BUTTON, BEDROOM_BUTTON, NIGHTSTAND_BUTTON) do |button, event, latency_ms|
-		if latency_ms > 2000
-			puts "[*] [#{button}] Ignoring #{event} because the latency is #{latency_ms} ms"
-		else
-			puts "[*] [#{button}] Handling #{event}"
+    begin
+        puts "[*] Opening a connection to flicd..."
+        client = Flic::SimpleClient.new
 
-			case button
-			when LIVING_ROOM_BUTTON
-				case event
-				when :button_single_click
-					puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
-				when :button_double_click
-					puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
-				when :button_hold
-					puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
-				end
+        puts "[*] Entering main loop"
+        client.listen(:low, LIVING_ROOM_BUTTON, BEDROOM_BUTTON, NIGHTSTAND_BUTTON) do |button, event, latency_ms|
+            if latency_ms > 2000
+                puts "[*] [#{button}] Ignoring #{event} because the latency is #{latency_ms} ms"
+            else
+                puts "[*] [#{button}] Handling #{event}"
 
-			when BEDROOM_BUTTON
-				case event
-				when :button_single_click
-					puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
-				when :button_double_click
-					puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
-				when :button_hold
-					puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
-				end
+                case button
+                when LIVING_ROOM_BUTTON
+                    case event
+                    when :button_single_click
+                        puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
+                    when :button_double_click
+                        puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
+                    when :button_hold
+                        puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
+                    end
 
-			when NIGHTSTAND_BUTTON
-				case event
-				when :button_single_click
-					puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
-				when :button_double_click
-					puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
-				when :button_hold
-					puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
-				end
-			end
-		end
-	end
-rescue StandardError => error
-	puts "[!] Whoops! #{error.inspect} occured. Wait for a second and restart everything."
-	sleep 1
+                when BEDROOM_BUTTON
+                    case event
+                    when :button_single_click
+                        puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
+                    when :button_double_click
+                        puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
+                    when :button_hold
+                        puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
+                    end
 
-	retry
-rescue Interrupt
-	puts "[*] Shutting down gracefully because of an interrupt"
+                when NIGHTSTAND_BUTTON
+                    case event
+                    when :button_single_click
+                        puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
+                    when :button_double_click
+                        puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
+                    when :button_hold
+                        puts HTTParty.post('https://api.wink.com/scenes/SCENE_ID/activate', headers: { Authorization: "Bearer #{WINK_ACCESS_TOKEN}" }).inspect
+                    end
+                end
+            end
+        end
+    rescue StandardError => error
+        puts "[!] Whoops! #{error.inspect} occured. Wait for a second and restart everything."
+        sleep 1
 
-	client.shutdown
-end
+        retry
+    rescue Interrupt
+        puts "[*] Shutting down gracefully because of an interrupt"
 
-puts "[*] Goodbye cruel world!"
+        client.shutdown
+    end
+
+    puts "[*] Goodbye cruel world!"
+
 ```
 
 ## Advanced Usage

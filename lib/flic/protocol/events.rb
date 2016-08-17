@@ -2,6 +2,7 @@ require 'flic/protocol'
 
 module Flic
   module Protocol
+    # A namespace module for all of the event classes
     module Events
       autoload :AdvertisementPacket, 'flic/protocol/events/advertisement_packet'
       autoload :BluetoothControllerStateChange, 'flic/protocol/events/bluetooth_controller_state_change'
@@ -47,11 +48,17 @@ module Flic
       }.freeze
   
       OPCODE_EVENT_CLASS = EVENT_CLASS_OPCODE.invert.freeze
-  
+
+      # Finds the event class for a given opcode
+      # @param opcode [Integer]
+      # @return [Class]
       def self.event_class_for_opcode(opcode)
         OPCODE_EVENT_CLASS[opcode]
       end
-  
+
+      # Finds the opcode for a given event class
+      # @param event_class [Class]
+      # @return [Integer]
       def self.opcode_for_event_class(event_class)
         EVENT_CLASS_OPCODE[event_class]
       end

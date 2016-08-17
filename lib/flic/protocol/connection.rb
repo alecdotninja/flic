@@ -2,10 +2,12 @@ require 'flic/protocol'
 
 module Flic
   module Protocol
+    # A wrapper around a socket that allows sending/receiving commands/events
     class Connection
       class UnderlyingSocketClosedError < Error; end
       class UnexpectedNilReturnValueFromRead < Error; end
 
+      # @return [Socket] the underlying socket
       attr_reader :socket
 
       def initialize(socket)
@@ -14,18 +16,28 @@ module Flic
         @write_semaphore = Mutex.new
       end
 
+      # Sends a command over the socket
+      # @param command [Flic::Protocol::Commands::Command]
       def send_command(command)
         send_packet Protocol.serialize_command(command)
       end
 
+      # Receives a command from the socket
+      # @note This method may block
+      # @return [Flic::Protocol::Commands::Command]
       def recv_command
         Protocol.parse_command(recv_packet)
       end
 
+      # Sends an event over the socket
+      # @param event [Flic::Protocol::Events::Event]
       def send_event(event)
         send_packet Protocol.serialize_event(event)
       end
 
+      # Receives an event from the socket
+      # @note This method may block
+      # @return [Flic::Protocol::Events::Event]
       def recv_event
         Protocol.parse_event(recv_packet)
       end

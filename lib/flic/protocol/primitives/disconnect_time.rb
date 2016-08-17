@@ -3,6 +3,7 @@ require 'flic/protocol/primitives'
 module Flic
   module Protocol
     module Primitives
+      # Time in seconds after the Flic button may disconnect after the latest press or release. The button will reconnect automatically when it is later pressed again and deliver its enqueued events. Valid values are 0 - 511.
       class DisconnectTime < BinData::Primitive
         uint16le :time, initial_value: 512
 

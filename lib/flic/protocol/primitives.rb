@@ -2,6 +2,7 @@ require 'flic/protocol'
 
 module Flic
   module Protocol
+    # A namespace module for all of the primitive classes
     module Primitives
       autoload :BluetoothAddress, 'flic/protocol/primitives/bluetooth_address'
       autoload :BluetoothAddressType, 'flic/protocol/primitives/bluetooth_address_type'

@@ -2,6 +2,7 @@ require 'flic/protocol'
 
 module Flic
   module Protocol
+    # A namespace module for all of the command classes
     module Commands
       autoload :CancelScanWizard, 'flic/protocol/commands/cancel_scan_wizard'
       autoload :ChangeModeParameters, 'flic/protocol/commands/change_mode_parameters'
@@ -32,10 +33,16 @@ module Flic
 
       OPCODE_COMMAND_CLASS = COMMAND_CLASS_OPCODE.invert.freeze
 
+      # Finds the command class for a given opcode
+      # @param opcode [Integer]
+      # @return [Class]
       def self.command_class_for_opcode(opcode)
         OPCODE_COMMAND_CLASS[opcode]
       end
 
+      # Finds the opcode for a given command class
+      # @param command_class [Class]
+      # @return [Integer]
       def self.opcode_for_command_class(command_class)
         COMMAND_CLASS_OPCODE[command_class]
       end

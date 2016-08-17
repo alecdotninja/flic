@@ -1,6 +1,8 @@
 require 'flic'
 
 module Flic
+  # This module contains an implementation of the Flic binary protocol. Of particular external interest is
+  # `Flic::Protocol::Connection` which provides a wrapper for the binary protocol around a socket instance.
   module Protocol
     extend self
 
@@ -12,8 +14,9 @@ module Flic
     autoload :PacketHeader, 'flic/protocol/packet_header'
     autoload :Primitives, 'flic/protocol/primitives'
 
-    INVALID_BUTTON_UUID = '00000000-0000-0000-0000-000000000000'.freeze
-
+    # Serializes an instance of a protocol command class to a binary string
+    # @param command [Flic::Protocol::Commands::Command]
+    # @return [String] binary string
     def serialize_command(command)
       case command
         when Commands::Command
@@ -25,6 +28,9 @@ module Flic
       raise Error, "Cannot serialize command `#{command.inspect}`"
     end
 
+    # Deserializes an instance of a protocol command class from a binary string
+    # @param serialized_command [String] binary string
+    # @return [Flic::Protocol::Commands::Command]
     def parse_command(serialized_command)
       command = Commands::Command.read(serialized_command)
       opcode = command.opcode
@@ -39,6 +45,9 @@ module Flic
       raise Error, "Cannot parse event `#{serialized_command.inspect}`"
     end
 
+    # Serializes an instance of a protocol event class to a binary string
+    # @param event [Flic::Protocol::Events::Event]
+    # @return [String] binary string
     def serialize_event(event)
       case event
         when Commands::Event
@@ -50,6 +59,9 @@ module Flic
       raise Error, "Cannot serialize event `#{event.inspect}`"
     end
 
+    # Deserializes an instance of a protocol event class from a binary string
+    # @param serialized_event [String] binary string
+    # @return [Flic::Protocol::Events::Event]
     def parse_event(serialized_event)
       event = Events::Event.read(serialized_event)
       opcode = event.opcode
