@@ -11,7 +11,7 @@ module Flic
         private
 
         def class_opcode
-          @@class_opcode ||= Events.opcode_for_event_class(self.class)
+          Events.opcode_for_event_class(self.class)
         end
 
         def opcode_matcher

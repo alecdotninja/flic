@@ -11,7 +11,7 @@ module Flic
         private
 
         def class_opcode
-          @@class_opcode ||= Commands.opcode_for_command_class(self.class)
+          Commands.opcode_for_command_class(self.class)
         end
 
         def opcode_matcher
