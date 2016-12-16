@@ -5,10 +5,10 @@ module Flic
     module Primitives
       # Time in seconds after the Flic button may disconnect after the latest press or release. The button will reconnect automatically when it is later pressed again and deliver its enqueued events. Valid values are 0 - 511.
       class DisconnectTime < BinData::Primitive
-        uint16le :time, initial_value: 512
+        uint16le :time, initial_value: 511
 
         def get
-          if time == 512
+          if time == 511
             nil
           else
             time
@@ -16,12 +16,12 @@ module Flic
         end
 
         def set(value)
-          if value == 512
-            raise RangeError, '512 is a special value that cannot be used for disconnect_time'
-          elsif value
-            self.time = value
+          if value == nil
+            self.time = 511
+          elsif value >= 511
+            raise RangeError, 'disconnect_time must be less than 511 seconds (or nil for never)'
           else
-            self.time = 512
+            self.time = value
           end
         end
       end
